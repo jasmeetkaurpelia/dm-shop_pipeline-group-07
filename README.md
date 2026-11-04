@@ -1,87 +1,130 @@
-# shop_pipeline — a reproducible, validated data pipeline
+# Shop Pipeline — A Reproducible, Validated Data Pipeline
 
-Starter project for **Chapter 3: Reproducible & Validated Data Pipelines** (Labs 3.1–3.3).
-It turns raw online-shop order files into trusted, documented outputs with **one command**.
+A data pipeline that transforms raw online-shop order data into clean, validated, and analysis-ready outputs.
 
-## Setup and run
+The project focuses on data quality, reproducibility, validation, data lineage, and reliable data processing.
+
+## Project Overview
+
+The pipeline processes monthly order exports and customer master data through a structured workflow:
+
+**Raw Data → Cleaning → Validation → Splitting → Enrichment → Outputs**
+
+It separates trusted records from problematic records, documents data transformations, and generates business summaries.
+
+## Setup and Run
+
+### 1. Clone the repository
 
 ```bash
-cd chapter3/shop_pipeline
+git clone https://github.com/jasmeetkaurpelia/dm-shop_pipeline-group-07.git
+cd dm-shop_pipeline-group-07
+```
+
+### 2. Create a virtual environment
+
+```bash
 python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
+```
+
+Activate it:
+
+**Windows (PowerShell):**
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+**Linux / macOS:**
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
+
+### 4. Run the pipeline
+
+```bash
 python pipeline.py
 ```
 
-Every run appends a block to `logs/run_log.txt`. Run it again — you get the same result.
+Each run appends information to `logs/run_log.txt`. Repeated runs with unchanged input data and configuration should produce consistent results.
 
-## Project structure
+## Project Structure
 
-```
+```text
 shop_pipeline/
-├── README.md            this file: how to run, data dictionary, cleaning rules
-├── requirements.txt     pandas, pandera
-├── pipeline.py          the steps: load → clean → validate → split → enrich → output
-├── rules.py             validation rules (pandera), one line each
+├── README.md
+├── requirements.txt
+├── pipeline.py
+├── rules.py
 ├── data/
-│   ├── raw/             files exactly as received — read, never written
-│   └── output/          trusted outputs (created by the pipeline)
+│   ├── raw/
+│   │   ├── customers.csv
+│   │   ├── orders_2026_01.csv
+│   │   ├── orders_2026_02.csv
+│   │   └── orders_2026_03.csv
+│   └── output/
 ├── logs/
-│   └── run_log.txt      what happened on every run (created by the pipeline)
+│   └── run_log.txt
 └── extras/
-    └── orders_2026_04.csv   a new month of data — used in Lab 3.2
+    └── orders_2026_04.csv
 ```
 
-Data flows one way: **raw → clean → output**. Never backwards, never overwriting raw.
+The `data/raw/` directory contains the original input files. These files are read by the pipeline and are not overwritten.
 
-## Inputs (`data/raw/`)
+Generated outputs are stored in `data/output/`, while execution details are recorded in `logs/`.
+
+## Input Data
 
 | File | Contents |
 |---|---|
-| `orders_2026_01.csv`, `orders_2026_02.csv`, `orders_2026_03.csv` | Monthly order exports: order_id, order_date, customer_id, category, quantity, unit_price |
-| `customers.csv` | Customer master: customer_id, customer_name, city, country, email, segment |
+| `orders_2026_01.csv` | January order records |
+| `orders_2026_02.csv` | February order records |
+| `orders_2026_03.csv` | March order records |
+| `customers.csv` | Customer master data |
+| `orders_2026_04.csv` | Additional order data supplied in `extras/` |
 
-## Steps (`pipeline.py`)
+**Order fields:** `order_id`, `order_date`, `customer_id`, `category`, `quantity`, `unit_price`
 
-| Step | Function | What it does |
+**Customer fields:** `customer_id`, `customer_name`, `city`, `country`, `email`, `segment`
+
+## Pipeline Workflow
+
+| Stage | Function | Description |
 |---|---|---|
-| Load | `load_raw()` | Reads every `orders_*.csv` as text and adds `source_file` (start of lineage) |
-| Clean | `clean_orders()`, `clean_customers()` | Removes exact duplicates, trims text, parses mixed date formats, converts numbers |
-| Validate | `validate()` | Runs the rules in `rules.py`. **Critical rule broken → stop, write nothing** |
-| Split | `split()` | Corrects known price issues; row-level problems → **quarantine with a reason** |
-| Enrich | `enrich_orders()` | Adds the customer's city and `line_total` |
-| Output | `output()` | Writes the three output files and the revenue to the run log |
+| Load | `load_raw()` | Reads monthly order files and adds `source_file` to preserve data lineage. |
+| Clean | `clean_orders()`, `clean_customers()` | Removes exact duplicates, trims text, parses dates, and converts numeric values. |
+| Validate | `validate()` | Applies validation rules defined in `rules.py`. Critical validation failures stop processing. |
+| Split | `split()` | Separates trusted records from records that require quarantine and applies the known March price correction. |
+| Enrich | `enrich_orders()` | Adds customer city information and calculates `line_total`. |
+| Output | `output()` | Writes the output datasets and records the run information. |
 
-**Stop or quarantine?** Stop for problems that break the whole table (e.g. a duplicate ID); quarantine problems that affect single rows (e.g. an unknown customer).
+## Data Quality: Stop or Quarantine?
 
-## Outputs (`data/output/`) — data dictionary
+The pipeline distinguishes between two types of data-quality problems:
 
-**`fct_orders.csv`** — trusted orders, ready for analysis
+- **Stop:** Critical issues that affect the reliability or structure of the dataset, such as duplicate order IDs or invalid identifiers.
+- **Quarantine:** Problems affecting individual records, such as missing prices, invalid quantities, missing dates, or unknown customers.
 
-| Column | Meaning | Unit / rule |
+Quarantined records are retained separately rather than silently included in trusted outputs.
+
+## Outputs and Data Dictionary
+
+### `fct_orders.csv`
+
+Contains trusted order records ready for analysis.
+
+| Column | Description | Unit / Rule |
 |---|---|---|
-| order_id | Order identifier | one capital letter + 3 digits, unique |
-| order_date | Date of the order | YYYY-MM-DD |
-| customer_id | Customer identifier | must exist in customers.csv |
-| category | Product category | Accessories or Electronics |
-| quantity | Items ordered | > 0 |
-| unit_price | Price per item | EUR, ≥ 0 |
-| source_file | Raw file the row came from | lineage |
-| city | Customer's city | from customers.csv |
-| line_total | Revenue of the order line | quantity × unit_price, EUR |
-
-**`quarantine_orders.csv`** — rows held back: same columns as the cleaned orders plus `reason`.
-
-**`revenue_by_city.csv`** — business summary: `city`, `line_total` (sum, EUR).
-
-## Cleaning rules
-
-| Rule | Where | Action |
-|---|---|---|
-| Exact duplicate rows | `clean_orders()` | removed |
-| Dates as YYYY-MM-DD or DD.MM.YYYY | `parse_mixed_date()` | unified |
-| order_id unique, not empty, pattern `^[A-Z]\d{3}$` | `rules.py` | stop |
-| category in the allowed list | `rules.py` | stop |
-| unit_price ≥ 0 | `rules.py` | stop |
-| March export has prices in cents | `split()` | divided by 100 |
-| quantity ≤ 0, missing price, missing date, unknown customer | `split()` | quarantine |
+| `order_id` | Order identifier | One capital letter followed by three digits; unique |
+| `order_date` | Order date | YYYY-MM-DD |
+| `customer_id` | Customer identifier | Must exist in customer data |
+| `category` | Product category | Accessories or Electronics |
+| `quantity` | Number of items ordered | Greater than 0 |
+| `unit_price` | Price per item | EUR, greater than or equal to 0 |
+| `source_file` | Original input filename | Data lineage |
+| `city` | Customer's city | Retrieved
