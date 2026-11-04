@@ -1,3 +1,8 @@
+# Shop Pipeline — Data Lineage
+
+The diagram shows how raw order and customer data moves through the pipeline to produce trusted datasets, quarantined records, and revenue summaries.
+
+```mermaid
 flowchart TD
     A["Raw monthly order files"] --> C["Load order data"]
     B["Customer master file"] --> D["Load customer data"]
@@ -24,3 +29,4 @@ flowchart TD
 
     J --> R["logs/run_log.txt"]
     L --> R
+```
