@@ -73,8 +73,21 @@ def clean_orders(orders):
 
 def clean_customers(customers):
     df = customers.copy()
+
+    # Remove leading and trailing whitespace
     for c in df.columns:
         df[c] = df[c].str.strip()
+
+    # Standardise the known country spelling
+    df["country"] = df["country"].replace({
+        "Germny": "Germany"
+    })
+
+    # Treat the known malformed email as missing
+    df["email"] = df["email"].replace({
+        "clara.schmidt(at)web.de": ""
+    })
+
     return df
 
 
@@ -96,7 +109,7 @@ def split(orders, customers):
     """Row-level problems go to quarantine with a reason; the rest is trusted."""
     df = orders.copy()
     # price correction: the March export stores prices in cents
-    # df.loc[df["source_file"] == "orders_2026_03.csv", "unit_price"] /= 100
+    df.loc[df["source_file"] == "orders_2026_03.csv", "unit_price"] /= 100
 
     reason = pd.Series("", index=df.index)
     reason[df["order_date"].isna()] = "missing order_date"
@@ -118,15 +131,40 @@ def enrich_orders(trusted, customers):
     return df
 
 
+
 def output(fct, quarantine):
     OUT.mkdir(parents=True, exist_ok=True)
+
     fct.to_csv(OUT / "fct_orders.csv", index=False)
     quarantine.to_csv(OUT / "quarantine_orders.csv", index=False)
-    revenue = (fct.groupby("city", as_index=False)["line_total"].sum().round(2)
-                  .sort_values("line_total", ascending=False))
-    revenue.to_csv(OUT / "revenue_by_city.csv", index=False)
+
+    # Revenue by city
+    revenue_city = (
+        fct.groupby("city", as_index=False)["line_total"]
+        .sum()
+        .round(2)
+        .sort_values("line_total", ascending=False)
+    )
+    revenue_city.to_csv(OUT / "revenue_by_city.csv", index=False)
+
+    # New output: revenue by category
+    revenue_category = (
+        fct.groupby("category", as_index=False)["line_total"]
+        .sum()
+        .round(2)
+        .sort_values("line_total", ascending=False)
+    )
+    revenue_category.to_csv(
+        OUT / "revenue_by_category.csv",
+        index=False
+    )
+
     log(f"Revenue: EUR {fct['line_total'].sum():,.0f}")
-    log("Wrote fct_orders.csv, quarantine_orders.csv, revenue_by_city.csv")
+    log(
+        "Wrote fct_orders.csv, quarantine_orders.csv, "
+        "revenue_by_city.csv, revenue_by_category.csv"
+    )
+
 
 
 def main():
