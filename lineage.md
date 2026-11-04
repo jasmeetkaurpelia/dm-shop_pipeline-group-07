@@ -1,6 +1,6 @@
 # Shop Pipeline — Data Lineage
 
-The diagram shows how raw order and customer data moves through the pipeline to produce trusted datasets, quarantined records, and revenue summaries.
+The diagram shows how raw order and customer data moves through the pipeline to produce cleaned customer data, trusted orders, quarantined records, and revenue summaries.
 
 ```mermaid
 flowchart TD
@@ -20,8 +20,10 @@ flowchart TD
     I -->|Yes| K["Split trusted and quarantined orders"]
 
     K --> L["Enrich trusted orders"]
+
     L --> M["fct_orders.csv"]
     K --> N["quarantine_orders.csv"]
+    F --> S["clean_customers.csv"]
 
     L --> O["Revenue aggregation"]
     O --> P["revenue_by_city.csv"]

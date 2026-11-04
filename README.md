@@ -70,6 +70,11 @@ shop_pipeline/
 │   │   ├── orders_2026_02.csv
 │   │   └── orders_2026_03.csv
 │   └── output/
+        ├── clean_customers.csv
+        ├── fct_orders.csv
+        ├── quarantine_orders.csv
+        ├── revenue_by_city.csv
+        └── revenue_by_category.csv
 ├── logs/
 │   └── run_log.txt
 └── extras/
@@ -117,6 +122,27 @@ Quarantined records are retained separately rather than silently included in tru
 ## Outputs and Data Dictionary
 
 All generated CSV files are stored in `data/output/`.
+
+### `clean_customers.csv`
+
+Contains all customer records after cleaning and validation.
+
+The original customer input file remains unchanged. The cleaned output includes:
+
+- Trimmed whitespace in text fields.
+- Standardised the known country spelling error (`Germny` to `Germany`).
+- Replaced the known malformed email with an empty value because the correct address could not be determined.
+
+The output retains the customer columns:
+
+| Column | Description |
+|---|---|
+| `customer_id` | Unique customer identifier |
+| `customer_name` | Customer name |
+| `city` | Customer city |
+| `country` | Standardised country |
+| `email` | Customer email; may be empty |
+| `segment` | Customer segment |
 
 ### `fct_orders.csv`
 

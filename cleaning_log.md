@@ -12,3 +12,4 @@
 | Price standardisation | Converted March unit prices from cents to euros | To ensure prices use the same currency unit across all monthly files |
 | Country standardisation | Corrected the known spelling error `Germny` to `Germany` | To ensure consistent country values |
 | Email handling | Replaced the known malformed email with an empty value | The correct email could not be determined, so no address was invented |
+| Cleaned customer output | Saved the cleaned customer master data as `clean_customers.csv` | To preserve and inspect cleaned customer records without modifying the raw input |

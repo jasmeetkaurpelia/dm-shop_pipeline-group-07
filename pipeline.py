@@ -132,8 +132,11 @@ def enrich_orders(trusted, customers):
 
 
 
-def output(fct, quarantine):
+def output(fct, quarantine, customers):
     OUT.mkdir(parents=True, exist_ok=True)
+
+    # Save cleaned customer data
+    customers.to_csv(OUT / "clean_customers.csv", index=False)
 
     fct.to_csv(OUT / "fct_orders.csv", index=False)
     quarantine.to_csv(OUT / "quarantine_orders.csv", index=False)
@@ -161,8 +164,9 @@ def output(fct, quarantine):
 
     log(f"Revenue: EUR {fct['line_total'].sum():,.0f}")
     log(
-        "Wrote fct_orders.csv, quarantine_orders.csv, "
-        "revenue_by_city.csv, revenue_by_category.csv"
+        "Wrote clean_customers.csv, fct_orders.csv, "
+        "quarantine_orders.csv, revenue_by_city.csv, "
+        "revenue_by_category.csv"
     )
 
 
@@ -174,7 +178,7 @@ def main():
     validate(orders, customers)
     trusted, quarantine = split(orders, customers)
     fct = enrich_orders(trusted, customers)
-    output(fct, quarantine)
+    output(fct, quarantine, customers)
     write_log("SUCCESS")
 
 
