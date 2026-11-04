@@ -1,4 +1,4 @@
-# Shop Pipeline — A Reproducible, Validated Data Pipeline
+# Shop Pipeline — A Reproducible, Validated Data Pipeline (Group 07)
 
 A data pipeline that transforms raw online-shop order data into clean, validated, and analysis-ready outputs.
 
@@ -6,7 +6,7 @@ The project focuses on data quality, reproducibility, validation, data lineage, 
 
 ## Project Overview
 
-The pipeline processes monthly order exports and customer master data through a structured workflow:
+This project was developed as part of the Data Management course by Group 07. The pipeline processes monthly order exports and customer master data through a structured workflow:
 
 **Raw Data → Cleaning → Validation → Splitting → Enrichment → Outputs**
 
@@ -226,7 +226,7 @@ The lineage diagram shows how raw order and customer files move through loading,
 - CSV
 - Git and GitHub
 
-## Team Members
+## Team Members - Group 07
 
 | Name | Role / Contribution |
 |---|---|
